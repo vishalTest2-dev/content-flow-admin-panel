@@ -6,7 +6,8 @@ import {
   LogOut, 
   Settings, 
   ChevronDown,
-  Bell
+  Bell,
+  KeyRound
 } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -15,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -22,6 +24,13 @@ const Header = () => {
     { id: 1, message: 'New blog post added' },
     { id: 2, message: 'Quiz category updated' }
   ]);
+
+  const handleLogout = () => {
+    // In a real app, this would handle the logout process
+    toast.success('Logged out successfully');
+    // Redirect to login page or home page after logout
+    // navigate('/login');
+  };
 
   return (
     <header className="bg-white shadow-sm h-16 flex items-center justify-end px-6 sticky top-0 z-30">
@@ -68,11 +77,15 @@ const Header = () => {
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/change-password')}>
-              <Settings size={16} className="mr-2" />
+              <KeyRound size={16} className="mr-2" />
               Change Password
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <Settings size={16} className="mr-2" />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut size={16} className="mr-2" />
               Logout
             </DropdownMenuItem>

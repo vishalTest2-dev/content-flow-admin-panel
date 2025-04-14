@@ -2,6 +2,7 @@
 import React from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
 import { 
   Bold, 
   Italic, 
@@ -33,6 +34,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        defaultAlignment: 'left',
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {

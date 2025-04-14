@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ChangePassword = () => {
+  const { updateProfile, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -21,7 +23,7 @@ const ChangePassword = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate passwords match
@@ -30,15 +32,20 @@ const ChangePassword = () => {
       return;
     }
     
-    // In a real app, this would save to a backend
-    toast.success('Password updated successfully');
-    
-    // Reset form
-    setFormData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+    try {
+      await updateProfile({
+        password: formData.newPassword
+      });
+      
+      // Reset form
+      setFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Failed to update password:', error);
+    }
   };
 
   return (
@@ -96,9 +103,22 @@ const ChangePassword = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
-                  <Save size={16} className="mr-2" />
-                  Update Password
+                <Button 
+                  type="submit" 
+                  className="bg-admin-primary hover:bg-admin-secondary"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Updating...
+                    </div>
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      Update Password
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

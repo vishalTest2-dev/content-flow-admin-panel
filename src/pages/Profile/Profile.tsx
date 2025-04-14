@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
+  const { user, updateProfile, isLoading } = useAuth();
+  
   const [profile, setProfile] = useState({
-    name: 'Admin User',
-    email: 'admin@example.com',
-    photo: '/placeholder.svg'
+    name: user?.name || '',
+    email: user?.email || '',
+    photo: user?.photo || '/placeholder.svg'
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,10 +23,13 @@ const Profile = () => {
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would save to a backend
-    toast.success('Profile updated successfully');
+    await updateProfile({
+      name: profile.name,
+      email: profile.email,
+      photo: profile.photo
+    });
   };
 
   return (
@@ -89,9 +94,22 @@ const Profile = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
-                    <Save size={16} className="mr-2" />
-                    Save Changes
+                  <Button 
+                    type="submit" 
+                    className="bg-admin-primary hover:bg-admin-secondary"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Saving...
+                      </div>
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-2" />
+                        Save Changes
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

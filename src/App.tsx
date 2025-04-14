@@ -4,6 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login/Login";
+import Register from "./pages/Login/Register";
 import Dashboard from "./pages/Dashboard";
 import QuizList from "./pages/Quiz/QuizList";
 import QuizCategoryList from "./pages/QuizCategory/QuizCategoryList";
@@ -20,25 +24,92 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/quiz" element={<QuizList />} />
-          <Route path="/quiz-category" element={<QuizCategoryList />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog-category" element={<BlogCategoryList />} />
-          <Route path="/links" element={<LinkList />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz"
+              element={
+                <ProtectedRoute>
+                  <QuizList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quiz-category"
+              element={
+                <ProtectedRoute>
+                  <QuizCategoryList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/blog"
+              element={
+                <ProtectedRoute>
+                  <BlogList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/blog-category"
+              element={
+                <ProtectedRoute>
+                  <BlogCategoryList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/links"
+              element={
+                <ProtectedRoute>
+                  <LinkList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/change-password"
+              element={
+                <ProtectedRoute>
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

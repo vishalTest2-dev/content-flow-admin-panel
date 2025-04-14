@@ -16,20 +16,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [notifications] = useState<{ id: number; message: string }[]>([
     { id: 1, message: 'New blog post added' },
     { id: 2, message: 'Quiz category updated' }
   ]);
 
   const handleLogout = () => {
-    // In a real app, this would handle the logout process
-    toast.success('Logged out successfully');
-    // Redirect to login page or home page after logout
-    // navigate('/login');
+    logout();
   };
 
   return (
@@ -67,7 +65,7 @@ const Header = () => {
               <div className="w-8 h-8 rounded-full bg-admin-primary flex items-center justify-center text-white">
                 <User size={18} />
               </div>
-              <span className="hidden sm:inline font-medium">Admin User</span>
+              <span className="hidden sm:inline font-medium">{user?.name || 'Admin User'}</span>
               <ChevronDown size={16} />
             </button>
           </DropdownMenuTrigger>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BookOpen, Plus, Edit, Trash2, Star } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
 import InfoCard from '@/components/common/InfoCard';
@@ -18,7 +18,6 @@ const initialBlogs = [
     shortDescription: "Learn the basics of React Hooks and how to use them in your projects.",
     image: "/placeholder.svg",
     category: "React",
-    rating: 4.5,
     status: "active",
     createdAt: "2024-04-01T00:00:00Z"
   },
@@ -28,7 +27,6 @@ const initialBlogs = [
     shortDescription: "Discover advanced CSS techniques to create stunning web designs.",
     image: "/placeholder.svg",
     category: "CSS",
-    rating: 4,
     status: "active",
     createdAt: "2024-03-25T00:00:00Z"
   },
@@ -38,7 +36,6 @@ const initialBlogs = [
     shortDescription: "A beginner's guide to TypeScript and its benefits.",
     image: "/placeholder.svg",
     category: "TypeScript",
-    rating: 5,
     status: "draft",
     createdAt: "2024-03-15T00:00:00Z"
   }
@@ -96,63 +93,36 @@ const BlogList = () => {
     setIsModalOpen(false);
   };
 
-  // Function to render rating stars
-  const renderRating = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={`full-${i}`} className="fill-yellow-400 text-yellow-400" size={16} />);
-    }
-    
-    if (hasHalfStar) {
-      stars.push(
-        <div key="half" className="relative">
-          <Star className="text-yellow-400" size={16} />
-          <Star className="absolute top-0 left-0 fill-yellow-400 text-yellow-400" size={16} style={{ clipPath: 'inset(0 50% 0 0)' }} />
-        </div>
-      );
-    }
-
-    const emptyStars = 5 - stars.length;
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} className="text-gray-300" size={16} />);
-    }
-
-    return <div className="flex">{stars}</div>;
-  };
-
   return (
     <Layout>
       <PageHeader 
-        title="Blog Management" 
-        subtitle="Create and manage your blog posts" 
-        icon={BookOpen}
+        title="Post Management" 
+        subtitle="Create and manage your posts" 
+        icon={FileText}
         action={
           <Button onClick={handleAddBlog} className="bg-admin-primary hover:bg-admin-secondary">
-            <Plus size={16} className="mr-1" /> Add New Blog
+            <Plus size={16} className="mr-1" /> Add New Post
           </Button>
         }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <InfoCard
-          title="Total Blogs"
+          title="Total Posts"
           value={totalBlogs}
-          icon={BookOpen}
+          icon={FileText}
           color="#3b82f6" // Blue
         />
         <InfoCard
-          title="Live Blogs"
+          title="Live Posts"
           value={liveBlogs}
-          icon={BookOpen}
+          icon={FileText}
           color="#22c55e" // Green
         />
         <InfoCard
-          title="Draft Blogs"
+          title="Draft Posts"
           value={draftBlogs}
-          icon={BookOpen}
+          icon={FileText}
           color="#f59e0b" // Yellow/Orange
         />
       </div>
@@ -164,10 +134,9 @@ const BlogList = () => {
             <thead className="admin-table-header">
               <tr>
                 <th className="admin-table-cell text-left font-semibold">Date Created</th>
-                <th className="admin-table-cell text-left font-semibold">Blog Image</th>
-                <th className="admin-table-cell text-left font-semibold">Blog Title</th>
+                <th className="admin-table-cell text-left font-semibold">Post Image</th>
+                <th className="admin-table-cell text-left font-semibold">Post Title</th>
                 <th className="admin-table-cell text-left font-semibold">Category</th>
-                <th className="admin-table-cell text-left font-semibold">Rating</th>
                 <th className="admin-table-cell text-left font-semibold">Status</th>
                 <th className="admin-table-cell text-right font-semibold">Actions</th>
               </tr>
@@ -185,7 +154,6 @@ const BlogList = () => {
                   </td>
                   <td className="admin-table-cell">{blog.title}</td>
                   <td className="admin-table-cell">{blog.category}</td>
-                  <td className="admin-table-cell">{renderRating(blog.rating)}</td>
                   <td className="admin-table-cell">
                     <StatusBadge status={blog.status} />
                   </td>
@@ -213,8 +181,8 @@ const BlogList = () => {
               ))}
               {blogs.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="admin-table-cell text-center py-8 text-gray-500">
-                    No blogs found. Click "Add New Blog" to create your first blog post.
+                  <td colSpan={6} className="admin-table-cell text-center py-8 text-gray-500">
+                    No posts found. Click "Add New Post" to create your first post.
                   </td>
                 </tr>
               )}
@@ -236,8 +204,8 @@ const BlogList = () => {
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Blog"
-        description="Are you sure you want to delete this blog post? This action cannot be undone."
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
       />

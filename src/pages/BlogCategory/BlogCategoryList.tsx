@@ -15,7 +15,6 @@ const initialCategories = [
     id: 1,
     name: "React",
     icon: "/placeholder.svg",
-    backgroundColor: "#61dafb",
     description: "Articles about React and its ecosystem",
     status: "active"
   },
@@ -23,7 +22,6 @@ const initialCategories = [
     id: 2,
     name: "JavaScript",
     icon: "/placeholder.svg",
-    backgroundColor: "#f7df1e",
     description: "Articles about JavaScript language and features",
     status: "active"
   },
@@ -31,7 +29,6 @@ const initialCategories = [
     id: 3,
     name: "CSS",
     icon: "/placeholder.svg",
-    backgroundColor: "#264de4",
     description: "Articles about CSS styling and design",
     status: "inactive"
   }
@@ -91,8 +88,8 @@ const BlogCategoryList = () => {
   return (
     <Layout>
       <PageHeader 
-        title="Blog Category Management" 
-        subtitle="Create and manage your blog categories" 
+        title="Post Category Management" 
+        subtitle="Create and manage your post categories" 
         icon={Folder}
         action={
           <Button onClick={handleAddCategory} className="bg-admin-primary hover:bg-admin-secondary">
@@ -122,7 +119,7 @@ const BlogCategoryList = () => {
         />
       </div>
 
-      {/* Blog Category Table */}
+      {/* Post Category Table */}
       <div className="admin-table">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -130,7 +127,6 @@ const BlogCategoryList = () => {
               <tr>
                 <th className="admin-table-cell text-left font-semibold">Category Name</th>
                 <th className="admin-table-cell text-left font-semibold">Category Icon</th>
-                <th className="admin-table-cell text-left font-semibold">Background Color</th>
                 <th className="admin-table-cell text-left font-semibold">Description</th>
                 <th className="admin-table-cell text-left font-semibold">Status</th>
                 <th className="admin-table-cell text-right font-semibold">Actions</th>
@@ -146,15 +142,6 @@ const BlogCategoryList = () => {
                       alt={category.name} 
                       className="w-10 h-10 object-cover rounded-md"
                     />
-                  </td>
-                  <td className="admin-table-cell">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-6 h-6 rounded-full" 
-                        style={{ backgroundColor: category.backgroundColor }}
-                      ></div>
-                      {category.backgroundColor}
-                    </div>
                   </td>
                   <td className="admin-table-cell max-w-xs truncate">{category.description}</td>
                   <td className="admin-table-cell">
@@ -184,7 +171,7 @@ const BlogCategoryList = () => {
               ))}
               {categories.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="admin-table-cell text-center py-8 text-gray-500">
+                  <td colSpan={5} className="admin-table-cell text-center py-8 text-gray-500">
                     No categories found. Click "Add New Category" to create your first category.
                   </td>
                 </tr>

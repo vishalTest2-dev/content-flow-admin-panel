@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 // Mock categories
 const categories = ["React", "CSS", "JavaScript", "TypeScript", "Node.js", "HTML"];
-const ratingOptions = [2, 2.5, 3, 3.5, 4, 4.5, 5];
 
 interface BlogFormModalProps {
   isOpen: boolean;
@@ -35,7 +34,6 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
     longDescription: '',
     image: '/placeholder.svg',
     category: '',
-    rating: 5,
     status: 'active'
   });
 
@@ -45,18 +43,16 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
         ...initialData,
         // Ensure all required fields exist
         shortDescription: initialData.shortDescription || '',
-        longDescription: initialData.longDescription || '',
-        rating: initialData.rating || 5
+        longDescription: initialData.longDescription || ''
       });
     } else {
-      // Reset form when adding new blog
+      // Reset form when adding new post
       setFormData({
         title: '',
         shortDescription: '',
         longDescription: '',
         image: '/placeholder.svg',
         category: '',
-        rating: 5,
         status: 'active'
       });
     }
@@ -80,15 +76,15 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Blog Post' : 'Add New Blog Post'}</DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Post' : 'Add New Post'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="image">Blog Image</Label>
+            <Label htmlFor="image">Post Image</Label>
             <div className="flex items-center gap-4">
               <img 
                 src={formData.image} 
-                alt="Blog Preview" 
+                alt="Post Preview" 
                 className="w-24 h-24 object-cover rounded-md"
               />
               <div className="flex-1">
@@ -107,13 +103,13 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Blog Title</Label>
+            <Label htmlFor="title">Post Title</Label>
             <Input 
               id="title" 
               name="title" 
               value={formData.title} 
               onChange={handleChange} 
-              placeholder="Enter blog title" 
+              placeholder="Enter post title" 
               required
             />
           </div>
@@ -125,7 +121,7 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
               name="shortDescription" 
               value={formData.shortDescription} 
               onChange={handleChange} 
-              placeholder="Enter a brief description of the blog post"
+              placeholder="Enter a brief description of the post"
               className="h-20"
               required
             />
@@ -138,7 +134,7 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
               name="longDescription" 
               value={formData.longDescription} 
               onChange={handleChange} 
-              placeholder="Enter the full content of the blog post"
+              placeholder="Enter the full content of the post"
               className="h-32"
               required
             />
@@ -147,40 +143,21 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value) => handleSelectChange('category', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="rating">Rating</Label>
-              <Select 
-                value={formData.rating.toString()} 
-                onValueChange={(value) => handleSelectChange('rating', parseFloat(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select rating" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ratingOptions.map(rating => (
-                    <SelectItem key={rating} value={rating.toString()}>{rating} Stars</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleSelectChange('category', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

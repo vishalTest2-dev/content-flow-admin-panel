@@ -28,7 +28,6 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     icon: '/placeholder.svg',
-    backgroundColor: '#3b82f6',
     description: '',
     status: 'active'
   });
@@ -45,7 +44,6 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
       setFormData({
         name: '',
         icon: '/placeholder.svg',
-        backgroundColor: '#3b82f6',
         description: '',
         status: 'active'
       });
@@ -70,7 +68,7 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Blog Category' : 'Add New Blog Category'}</DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Post Category' : 'Add New Post Category'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -106,26 +104,6 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
               placeholder="Enter category name" 
               required
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="backgroundColor">Background Color</Label>
-            <div className="flex gap-3">
-              <Input 
-                id="backgroundColor" 
-                name="backgroundColor" 
-                type="color"
-                value={formData.backgroundColor} 
-                onChange={handleChange}
-                className="w-12 h-10 p-1 cursor-pointer"
-              />
-              <Input 
-                value={formData.backgroundColor}
-                onChange={handleChange}
-                name="backgroundColor"
-                placeholder="#HEX color code"
-              />
-            </div>
           </div>
 
           <div className="space-y-2">

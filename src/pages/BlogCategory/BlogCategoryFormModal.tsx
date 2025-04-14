@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog, 
@@ -9,8 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RichTextEditor from '@/components/common/RichTextEditor';
 
 interface BlogCategoryFormModalProps {
   isOpen: boolean;
@@ -57,6 +58,10 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
 
   const handleSelectChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditorChange = (content: string) => {
+    setFormData(prev => ({ ...prev, description: content }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -108,13 +113,11 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description" 
-              name="description" 
-              value={formData.description} 
-              onChange={handleChange} 
+            <RichTextEditor 
+              content={formData.description} 
+              onChange={handleEditorChange}
               placeholder="Enter category description"
-              className="h-24"
+              className="min-h-[150px]"
             />
           </div>
 

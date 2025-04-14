@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog, 
@@ -11,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RichTextEditor from '@/components/common/RichTextEditor';
 
 // Mock categories
 const categories = ["React", "CSS", "JavaScript", "TypeScript", "Node.js", "HTML"];
@@ -65,6 +67,10 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
 
   const handleSelectChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditorChange = (content: string) => {
+    setFormData(prev => ({ ...prev, longDescription: content }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -129,18 +135,12 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="longDescription">Long Description</Label>
-            <Textarea 
-              id="longDescription" 
-              name="longDescription" 
-              value={formData.longDescription} 
-              onChange={handleChange} 
+            <RichTextEditor 
+              content={formData.longDescription} 
+              onChange={handleEditorChange}
               placeholder="Enter the full content of the post"
-              className="h-32"
-              required
+              className="min-h-[200px]"
             />
-            <p className="text-xs text-gray-500">
-              Note: In a production app, this would use a rich text editor.
-            </p>
           </div>
 
           <div className="space-y-2">

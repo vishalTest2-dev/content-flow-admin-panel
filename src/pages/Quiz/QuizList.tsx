@@ -1,14 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ClipboardList, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
 import InfoCard from '@/components/common/InfoCard';
 import StatusBadge from '@/components/common/StatusBadge';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import QuizFormModal from './QuizFormModal';
-
+import { getQuizzes, deleteQuiz } from '@/services/quiz.service';
+import { Quiz } from '@/services/quiz.service';
 // Mock quiz data
 const initialQuizzes = [
   {
@@ -49,68 +51,75 @@ const initialQuizzes = [
 ];
 
 const QuizList = () => {
-  const [quizzes, setQuizzes] = useState(initialQuizzes);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingQuiz, setEditingQuiz] = useState<any>(null);
+  const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [quizToDelete, setQuizToDelete] = useState<number | null>(null);
+  const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
+
+  const fetchQuizzes = async () => {
+    try {
+      setLoading(true);
+      const data = await getQuizzes();
+      setQuizzes(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch quizzes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Stats calculation
   const totalQuizzes = quizzes.length;
-  const activeQuizzes = quizzes.filter(quiz => quiz.status === 'active').length;
-  const inactiveQuizzes = quizzes.filter(quiz => quiz.status === 'inactive').length;
+  const activeQuizzes = quizzes.filter(quiz => quiz.status === 'published').length;
+  const inactiveQuizzes = quizzes.filter(quiz => quiz.status === 'draft').length;
 
   const handleAddQuiz = () => {
     setEditingQuiz(null);
     setIsModalOpen(true);
   };
 
-  const handleEditQuiz = (quiz: any) => {
+  const handleEditQuiz = (quiz: Quiz) => {
     setEditingQuiz(quiz);
     setIsModalOpen(true);
   };
 
-  const handleDeletePrompt = (id: number) => {
-    setQuizToDelete(id);
-    setIsConfirmDialogOpen(true);
+  const handleDeletePrompt = (id: string) => {
+    setQuizToDelete(id);    
+    setIsConfirmDialogOpen(true);    
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (quizToDelete) {
-      setQuizzes(quizzes.filter(quiz => quiz.id !== quizToDelete));
+      try {
+        await deleteQuiz(quizToDelete);
+        setQuizzes(quizzes.filter(quiz => quiz._id !== quizToDelete));
+      } catch (err: any) {
+        // Consider displaying a toast or error message here.
+        console.error("Failed to delete quiz:", err.message);
+      }
     }
     setIsConfirmDialogOpen(false);
   };
 
-  const handleFormSubmit = (quizData: any) => {
-    if (editingQuiz) {
-      // Update existing quiz
-      setQuizzes(quizzes.map(quiz => 
-        quiz.id === editingQuiz.id ? { ...quiz, ...quizData } : quiz
-      ));
-    } else {
-      // Add new quiz
-      const newQuiz = {
-        id: Math.max(...quizzes.map(q => q.id), 0) + 1,
-        ...quizData
-      };
-      setQuizzes([...quizzes, newQuiz]);
-    }
-    setIsModalOpen(false);
-  };
-
   return (
     <Layout>
-      <PageHeader 
-        title="Quiz Management" 
-        subtitle="Create and manage your quizzes" 
+      <PageHeader
+        title="Quiz Management"
+        subtitle="Create and manage your quizzes"
         icon={ClipboardList}
         action={
           <Button onClick={handleAddQuiz} className="bg-admin-primary hover:bg-admin-secondary">
             <Plus size={16} className="mr-1" /> Create Quiz
           </Button>
         }
-      />
+      />      
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <InfoCard
@@ -133,68 +142,71 @@ const QuizList = () => {
         />
       </div>
 
-      {/* Quiz Table */}
-      <div className="admin-table">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="admin-table-header">
-              <tr>
-                <th className="admin-table-cell text-left font-semibold">Question</th>
-                <th className="admin-table-cell text-left font-semibold">Answer</th>
-                <th className="admin-table-cell text-left font-semibold">Category</th>
-                <th className="admin-table-cell text-left font-semibold">Status</th>
-                <th className="admin-table-cell text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      {loading ? (
+        <p>Loading quizzes...</p>
+      ) : error ? (
+        <p className="text-red-500">Error: {error}</p>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {quizzes.map((quiz) => (
-                <tr key={quiz.id} className="admin-table-row">
-                  <td className="admin-table-cell">{quiz.question}</td>
-                  <td className="admin-table-cell">{quiz.answer}</td>
-                  <td className="admin-table-cell">{quiz.category}</td>
-                  <td className="admin-table-cell">
+                <TableRow key={quiz._id}>
+                  <TableCell>{quiz.title}</TableCell>
+                  <TableCell>{quiz.category?.name || 'Uncategorized'}</TableCell>
+                  <TableCell>
                     <StatusBadge status={quiz.status} />
-                  </td>
-                  <td className="admin-table-cell text-right">
-                    <div className="admin-table-actions justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEditQuiz(quiz)}
-                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
                       >
-                        <Edit size={14} />
+                        <Edit size={16} />
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeletePrompt(quiz.id)}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeletePrompt(quiz._id)}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={16} />
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {quizzes.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="admin-table-cell text-center py-8 text-gray-500">
-                    No quizzes found. Click "Create Quiz" to add your first quiz.
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center p-4">
+                    No quizzes found.
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      )}
 
       {/* Quiz Form Modal */}
       <QuizFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
         initialData={editingQuiz}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          fetchQuizzes();
+          setEditingQuiz(null);
+        }}
       />
 
       {/* Confirm Delete Dialog */}

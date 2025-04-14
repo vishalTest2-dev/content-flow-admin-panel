@@ -23,4 +23,66 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export default api;
+const getLinks = async () => {
+  const response = await api.get('/links');
+  return response.data;
+};
+
+const getLink = async (id: string) => {
+  const response = await api.get(`/links/${id}`);
+  return response.data;
+};
+
+const createLink = async (data: any) => {
+  const response = await api.post('/links', data);
+  return response.data;
+};
+
+const updateLink = async (id: string, data: any) => {
+  const response = await api.put(`/links/${id}`, data);
+  return response.data;
+};
+
+const deleteLink = async (id: string) => {
+  const response = await api.delete(`/links/${id}`);
+  return response.data;
+};
+
+const getSettings = async () => {
+  const response = await api.get('/settings');
+  return response.data;
+};
+
+const getSetting = async (key: string) => {
+  const response = await api.get(`/settings/${key}`);
+  return response.data;
+};
+
+const createSetting = async (data: any) => {
+  const response = await api.post('/settings', data);
+  return response.data;
+};
+
+const updateSetting = async (key: string, data: any) => {
+  const response = await api.put(`/settings/${key}`, data);
+  return response.data;
+};
+
+const deleteSetting = async (key: string) => {
+  const response = await api.delete(`/settings/${key}`);
+  return response.data;
+};
+
+export {
+  api as default,
+  getLinks,
+  getLink,
+  createLink,
+  updateLink,
+  deleteLink,
+  getSettings,
+  getSetting,
+  createSetting,
+  updateSetting,
+  deleteSetting,
+};

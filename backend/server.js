@@ -9,6 +9,8 @@ const quizRoutes = require('./routes/quiz.routes');
 const quizCategoryRoutes = require('./routes/quizCategory.routes');
 const postRoutes = require('./routes/post.routes');
 const postCategoryRoutes = require('./routes/postCategory.routes');
+const linkRoutes = require('./routes/link.routes');
+const settingRoutes = require('./routes/setting.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +31,8 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/quiz-categories', quizCategoryRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/post-categories', postCategoryRoutes);
+app.use('/api/links', linkRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Default route
 app.get('/', (req, res) => {

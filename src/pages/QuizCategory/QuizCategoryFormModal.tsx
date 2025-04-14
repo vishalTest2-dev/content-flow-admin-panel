@@ -1,154 +1,146 @@
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter 
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import RichTextEditor from '@/components/common/RichTextEditor';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { createQuizCategory, updateQuizCategory } from '@/services/quizCategory.service'; // Assuming these exist
+import { useToast } from '@/hooks/use-toast';
 
 interface QuizCategoryFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: any) => void;
-  initialData: any;
+    isOpen: boolean;
+    onClose: () => void;
+    category?: any; // Optional category for editing
 }
 
-const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  initialData 
-}) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    icon: '/placeholder.svg',
-    description: '',
-    status: 'active'
-  });
+const formSchema = z.object({
+    name: z.string().min(1, { message: "Name is required" }),
+    description: z.string().optional(),
+    status: z.enum(["active", "inactive"]).default("active"),
+});
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        ...initialData,
-        // Ensure all required fields exist
-        description: initialData.description || ''
-      });
-    } else {
-      // Reset form when adding new category
-      setFormData({
-        name: '',
-        icon: '/placeholder.svg',
-        description: '',
-        status: 'active'
-      });
-    }
-  }, [initialData, isOpen]);
+const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, onClose, category }) => {
+    const { toast } = useToast();
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: category || {
+            name: "",
+            description: "",
+            status: "active",
+        },
+    });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            if (category) {
+                await updateQuizCategory(category._id, data);
+                toast({ title: "Success", description: "Quiz category updated." });
+            } else {
+                await createQuizCategory(data);
+                toast({ title: "Success", description: "Quiz category created." });
+            }
+            form.reset();
+            onClose();
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.response?.data?.message || "An error occurred.",
+                variant: "destructive",
+            });
+        }
+    };
 
-  const handleSelectChange = (name: string, value: any) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditorChange = (content: string) => {
-    setFormData(prev => ({ ...prev, description: content }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Quiz Category' : 'Create Quiz Category'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="icon">Category Icon</Label>
-            <div className="flex items-center gap-4">
-              <img 
-                src={formData.icon} 
-                alt="Category Icon Preview" 
-                className="w-16 h-16 object-cover rounded-md"
-              />
-              <div className="flex-1">
-                <Input 
-                  id="icon" 
-                  type="file" 
-                  // In a real app, this would upload the file and update the icon URL
-                  // For now, we'll keep the placeholder
-                  className="cursor-pointer"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Recommended: 100x100px, JPG or PNG
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Category Name</Label>
-            <Input 
-              id="name" 
-              name="name" 
-              value={formData.name} 
-              onChange={handleChange} 
-              placeholder="Enter category name" 
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <RichTextEditor 
-              content={formData.description} 
-              onChange={handleEditorChange}
-              placeholder="Enter category description"
-              className="min-h-[150px]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={(value) => handleSelectChange('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="mr-2">
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
-              {initialData ? 'Update' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle>{category ? 'Edit Quiz Category' : 'Create Quiz Category'}</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter category name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <RichTextEditor
+                                            content={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="Enter category description"
+                                            className="min-h-[150px]"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="status"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Status</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select status" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="active">Active</SelectItem>
+                                            <SelectItem value="inactive">Inactive</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter className="pt-4">
+                            <Button type="button" variant="outline" onClick={onClose} className="mr-2">
+                                Cancel
+                            </Button>
+                            <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
+                                {category ? 'Update' : 'Save'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
 export default QuizCategoryFormModal;

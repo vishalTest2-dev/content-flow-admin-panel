@@ -1,10 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
 import InfoCard from '@/components/common/InfoCard';
 import StatusBadge from '@/components/common/StatusBadge';
+import {
+  getPostCategories,
+  deletePostCategory,
+} from '@/services/postCategory.service'; // Import API functions
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import BlogCategoryFormModal from './BlogCategoryFormModal';
@@ -35,7 +39,7 @@ const initialCategories = [
 ];
 
 const BlogCategoryList = () => {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -46,6 +50,25 @@ const BlogCategoryList = () => {
   const activeCategories = categories.filter(category => category.status === 'active').length;
   const inactiveCategories = categories.filter(category => category.status === 'inactive').length;
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getPostCategories();
+      setCategories(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch categories');
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleAddCategory = () => {
     setEditingCategory(null);
     setIsModalOpen(true);
@@ -61,29 +84,27 @@ const BlogCategoryList = () => {
     setIsConfirmDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (categoryToDelete) {
-      setCategories(categories.filter(category => category.id !== categoryToDelete));
+      try {
+        await deletePostCategory(categoryToDelete);
+        fetchCategories(); // Refresh the category list
+      } catch (err: any) {
+        // Handle deletion error (e.g., display an error message)
+        console.error('Error deleting category:', err.message);
+      }
     }
     setIsConfirmDialogOpen(false);
   };
 
-  const handleFormSubmit = (categoryData: any) => {
-    if (editingCategory) {
-      // Update existing category
-      setCategories(categories.map(category => 
-        category.id === editingCategory.id ? { ...category, ...categoryData } : category
-      ));
-    } else {
-      // Add new category
-      const newCategory = {
-        id: Math.max(...categories.map(c => c.id), 0) + 1,
-        ...categoryData
-      };
-      setCategories([...categories, newCategory]);
-    }
-    setIsModalOpen(false);
+  const handleFormSubmit = async () => {
+    setIsModalOpen(false); // Close modal regardless of success/failure
+    fetchCategories(); // Refresh categories after submission
   };
+
+  if (loading) {
+    return <Layout>Loading categories...</Layout>;
+  }
 
   return (
     <Layout>
@@ -119,6 +140,10 @@ const BlogCategoryList = () => {
         />
       </div>
 
+      {error && (
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
+
       {/* Post Category Table */}
       <div className="admin-table">
         <div className="overflow-x-auto">
@@ -133,7 +158,7 @@ const BlogCategoryList = () => {
               </tr>
             </thead>
             <tbody>
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <tr key={category.id} className="admin-table-row">
                   <td className="admin-table-cell">{category.name}</td>
                   <td className="admin-table-cell">
@@ -153,7 +178,7 @@ const BlogCategoryList = () => {
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleEditCategory(category)}
-                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
                       >
                         <Edit size={14} />
                       </Button>
@@ -169,7 +194,7 @@ const BlogCategoryList = () => {
                   </td>
                 </tr>
               ))}
-              {categories.length === 0 && (
+              {categories?.length === 0 && (
                 <tr>
                   <td colSpan={5} className="admin-table-cell text-center py-8 text-gray-500">
                     No categories found. Click "Add New Category" to create your first category.
@@ -185,7 +210,7 @@ const BlogCategoryList = () => {
       <BlogCategoryFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
+        onSuccess={handleFormSubmit}
         initialData={editingCategory}
       />
 

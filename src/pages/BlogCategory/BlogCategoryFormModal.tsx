@@ -1,151 +1,126 @@
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogFooter 
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { PostCategory } from '@/services/postCategory.service'; // Assuming this type exists
 import RichTextEditor from '@/components/common/RichTextEditor';
 
 interface BlogCategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
-  initialData: any;
+  onSubmit: (data: PostCategory) => void; // Updated type here
+  initialData?: PostCategory; // Updated type here and made optional
 }
 
-const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  initialData 
+const formSchema = z.object({
+  name: z.string().min(1, {
+    message: 'Name is required',
+  }),
+  description: z.string().optional(),
+});
+
+const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
 }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    icon: '/placeholder.svg',
-    description: '',
-    status: 'active'
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData || {
+      name: '',
+      description: '',
+    },
   });
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        ...initialData,
-        // Ensure all required fields exist
-        description: initialData.description || ''
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      onSubmit(values as PostCategory); // Pass values as PostCategory
+      onClose();
+      toast({
+        title: initialData ? 'Category Updated' : 'Category Created',
+        description: initialData ? 'The post category has been updated.' : 'The post category has been created.',
       });
-    } else {
-      // Reset form when adding new category
-      setFormData({
-        name: '',
-        icon: '/placeholder.svg',
-        description: '',
-        status: 'active'
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was an error. Please try again.',
       });
     }
-  }, [initialData, isOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: any) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditorChange = (content: string) => {
-    setFormData(prev => ({ ...prev, description: content }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Post Category' : 'Add New Post Category'}</DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Post Category' : 'Create Post Category'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="icon">Category Icon</Label>
-            <div className="flex items-center gap-4">
-              <img 
-                src={formData.icon} 
-                alt="Category Icon Preview" 
-                className="w-16 h-16 object-cover rounded-md"
-              />
-              <div className="flex-1">
-                <Input 
-                  id="icon" 
-                  type="file" 
-                  // In a real app, this would upload the file and update the icon URL
-                  // For now, we'll keep the placeholder
-                  className="cursor-pointer"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Recommended: 100x100px, JPG or PNG
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Category Name</Label>
-            <Input 
-              id="name" 
-              name="name" 
-              value={formData.name} 
-              onChange={handleChange} 
-              placeholder="Enter category name" 
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Post Category Name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <RichTextEditor 
-              content={formData.description} 
-              onChange={handleEditorChange}
-              placeholder="Enter category description"
-              className="min-h-[150px]"
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <RichTextEditor
+                      content={field.value}
+                      onChange={field.onChange}
+                      placeholder="Post Category Description"
+                      className="min-h-[150px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={(value) => handleSelectChange('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="mr-2">
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
-              {initialData ? 'Update' : 'Add'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={onClose} className="mr-2">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-admin-primary hover:bg-admin-secondary">
+                {initialData ? 'Update' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
 import InfoCard from '@/components/common/InfoCard';
 import StatusBadge from '@/components/common/StatusBadge';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import BlogFormModal from './BlogFormModal';
+import BlogFormModal from "@/pages/Blog/BlogFormModal";
 import { formatDate } from '@/lib/utils';
 
 // Mock blog data
@@ -41,176 +42,157 @@ const initialBlogs = [
   }
 ];
 
+import { getPosts, deletePost } from "@/services/post.service"; // Adjust import path as needed
+
 const BlogList = () => {
-  const [blogs, setBlogs] = useState(initialBlogs);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<any>(null);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [blogToDelete, setBlogToDelete] = useState<number | null>(null);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
+
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getPosts();
+      setPosts(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch posts");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   // Stats calculation
-  const totalBlogs = blogs.length;
-  const liveBlogs = blogs.filter(blog => blog.status === 'active').length;
-  const draftBlogs = blogs.filter(blog => blog.status === 'draft').length;
+  const totalPosts = posts.length;
+  const livePosts = posts.filter(post => post.status === 'published').length; // Assuming 'published' is the live status
+  const draftPosts = posts.filter(post => post.status === 'draft').length;
 
-  const handleAddBlog = () => {
-    setEditingBlog(null);
-    setIsModalOpen(true);
+  const handleCreatePost = () => {
+    setEditingPost(null);
+    setIsFormModalOpen(true);
   };
 
-  const handleEditBlog = (blog: any) => {
-    setEditingBlog(blog);
-    setIsModalOpen(true);
+  const handleEditPost = (post: any) => {
+    setEditingPost(post);
+    setIsFormModalOpen(true);
   };
 
-  const handleDeletePrompt = (id: number) => {
-    setBlogToDelete(id);
-    setIsConfirmDialogOpen(true);
+  const handleDeletePost = (post: any) => {
+    setPostToDelete(post);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (blogToDelete) {
-      setBlogs(blogs.filter(blog => blog.id !== blogToDelete));
+  const confirmDeletePost = async () => {
+    if (postToDelete) {
+      try {
+        await deletePost(postToDelete._id);
+        setPosts(posts.filter(post => post._id !== postToDelete._id));
+      } catch (err: any) {
+        // Handle error, e.g., show a toast
+        console.error("Error deleting post:", err);
+      }
+      setPostToDelete(null);
     }
-    setIsConfirmDialogOpen(false);
+    setIsDeleteModalOpen(false);
   };
 
-  const handleFormSubmit = (blogData: any) => {
-    if (editingBlog) {
-      // Update existing blog
-      setBlogs(blogs.map(blog => 
-        blog.id === editingBlog.id ? { ...blog, ...blogData } : blog
-      ));
-    } else {
-      // Add new blog
-      const newBlog = {
-        id: Math.max(...blogs.map(b => b.id), 0) + 1,
-        createdAt: new Date().toISOString(),
-        ...blogData
-      };
-      setBlogs([...blogs, newBlog]);
-    }
-    setIsModalOpen(false);
+  const handleFormSuccess = () => {
+    setIsFormModalOpen(false);
+    setEditingPost(null);
+    fetchPosts();
   };
 
   return (
     <Layout>
-      <PageHeader 
-        title="Post Management" 
-        subtitle="Create and manage your posts" 
+      <PageHeader
+        title="Post Management"
+        subtitle="Create and manage your posts"
         icon={FileText}
         action={
-          <Button onClick={handleAddBlog} className="bg-admin-primary hover:bg-admin-secondary">
+          <Button onClick={handleCreatePost} className="bg-admin-primary hover:bg-admin-secondary">
             <Plus size={16} className="mr-1" /> Add New Post
           </Button>
         }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <InfoCard
-          title="Total Posts"
-          value={totalBlogs}
-          icon={FileText}
-          color="#3b82f6" // Blue
-        />
-        <InfoCard
-          title="Live Posts"
-          value={liveBlogs}
-          icon={FileText}
-          color="#22c55e" // Green
-        />
-        <InfoCard
-          title="Draft Posts"
-          value={draftBlogs}
-          icon={FileText}
-          color="#f59e0b" // Yellow/Orange
-        />
+        <InfoCard title="Total Posts" value={totalPosts} icon={FileText} color="#3b82f6" />
+        <InfoCard title="Live Posts" value={livePosts} icon={FileText} color="#22c55e" />
+        <InfoCard title="Draft Posts" value={draftPosts} icon={FileText} color="#f59e0b" />
       </div>
 
-      {/* Blog Table */}
-      <div className="admin-table">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="admin-table-header">
-              <tr>
-                <th className="admin-table-cell text-left font-semibold">Date Created</th>
-                <th className="admin-table-cell text-left font-semibold">Post Image</th>
-                <th className="admin-table-cell text-left font-semibold">Post Title</th>
-                <th className="admin-table-cell text-left font-semibold">Category</th>
-                <th className="admin-table-cell text-left font-semibold">Status</th>
-                <th className="admin-table-cell text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blogs.map((blog) => (
-                <tr key={blog.id} className="admin-table-row">
-                  <td className="admin-table-cell">{formatDate(blog.createdAt)}</td>
-                  <td className="admin-table-cell">
-                    <img 
-                      src={blog.image} 
-                      alt={blog.title} 
-                      className="w-16 h-12 object-cover rounded-md"
-                    />
-                  </td>
-                  <td className="admin-table-cell">{blog.title}</td>
-                  <td className="admin-table-cell">{blog.category}</td>
-                  <td className="admin-table-cell">
-                    <StatusBadge status={blog.status} />
-                  </td>
-                  <td className="admin-table-cell text-right">
-                    <div className="admin-table-actions justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleEditBlog(blog)}
-                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeletePrompt(blog.id)}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {blogs.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="admin-table-cell text-center py-8 text-gray-500">
-                    No posts found. Click "Add New Post" to create your first post.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {isLoading ? (
+        <p>Loading posts...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {posts.map((post) => (
+              <TableRow key={post._id}>
+                <TableCell>{post.title}</TableCell>
+                <TableCell>{post.category ? post.category.name : "Uncategorized"}</TableCell>
+                <TableCell>
+                  <StatusBadge status={post.status} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditPost(post)}
+                    >
+                      <Edit size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeletePost(post)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
-      {/* Blog Form Modal */}
       <BlogFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
-        initialData={editingBlog}
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        post={editingPost}
+        onSuccess={handleFormSuccess}
       />
 
-      {/* Confirm Delete Dialog */}
       <ConfirmDialog
-        isOpen={isConfirmDialogOpen}
-        onClose={() => setIsConfirmDialogOpen(false)}
-        onConfirm={handleDeleteConfirm}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeletePost}
         title="Delete Post"
         description="Are you sure you want to delete this post? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
       />
     </Layout>
-  );
+  )
 };
 
 export default BlogList;

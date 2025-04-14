@@ -1,94 +1,106 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link as LinkIcon, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
-import StatusBadge from '@/components/common/StatusBadge';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
-import LinkFormModal from './LinkFormModal';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatDate } from '@/lib/utils';
+import LinkFormModal from './LinkFormModal';
+import { getLinks, deleteLink } from '@/services/api'; // Assuming you have these API functions
 
-// Mock link data
-const initialLinks = [
-  {
-    id: 1,
-    name: "Quiz App Welcome",
-    url: "https://example.com/quiz-welcome",
-    createdLink: "quizapp.com/welcome",
-    status: "active",
-    createdAt: "2024-04-01T00:00:00Z"
-  },
-  {
-    id: 2,
-    name: "Easter Quiz Special",
-    url: "https://example.com/easter-quiz",
-    createdLink: "quizapp.com/easter",
-    status: "active",
-    createdAt: "2024-03-25T00:00:00Z"
-  },
-  {
-    id: 3,
-    name: "Science Quiz Promotion",
-    url: "https://example.com/science-quiz",
-    createdLink: "quizapp.com/science",
-    status: "inactive",
-    createdAt: "2024-03-15T00:00:00Z"
-  }
-];
+interface Link {
+  _id: string;
+  title: string;
+  url: string;
+  order: number;
+  category?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const LinkList = () => {
-  const [links, setLinks] = useState(initialLinks);
+  const [links, setLinks] = useState<Link[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<any>(null);
+  const [editingLink, setEditingLink] = useState<Link | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [linkToDelete, setLinkToDelete] = useState<number | null>(null);
+  const [linkToDelete, setLinkToDelete] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLinks();
+  }, []);
+
+  const fetchLinks = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getLinks();
+      setLinks(response.data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to fetch links');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddLink = () => {
     setEditingLink(null);
     setIsModalOpen(true);
   };
 
-  const handleEditLink = (link: any) => {
+  const handleEditLink = (link: Link) => {
     setEditingLink(link);
     setIsModalOpen(true);
   };
 
-  const handleDeletePrompt = (id: number) => {
+  const handleDeletePrompt = (id: string) => {
     setLinkToDelete(id);
     setIsConfirmDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (linkToDelete) {
-      setLinks(links.filter(link => link.id !== linkToDelete));
+      try {
+        await deleteLink(linkToDelete);
+        setLinks(links.filter(link => link._id !== linkToDelete));
+      } catch (err: any) {
+        // Handle delete error (e.g., display a toast)
+        console.error('Error deleting link:', err);
+      } finally {
+        setLinkToDelete(null);
+        setIsConfirmDialogOpen(false);
+      }
     }
-    setIsConfirmDialogOpen(false);
   };
 
-  const handleFormSubmit = (linkData: any) => {
-    if (editingLink) {
-      // Update existing link
-      setLinks(links.map(link => 
-        link.id === editingLink.id ? { ...link, ...linkData } : link
-      ));
-    } else {
-      // Add new link
-      const newLink = {
-        id: Math.max(...links.map(l => l.id), 0) + 1,
-        createdAt: new Date().toISOString(),
-        ...linkData
-      };
-      setLinks([...links, newLink]);
-    }
+  const handleFormSubmit = async () => {
     setIsModalOpen(false);
+    await fetchLinks();
   };
+
+  if (isLoading) {
+    return <Layout><p>Loading links...</p></Layout>;
+  }
+
+  if (error) {
+    return <Layout><p>Error: {error}</p></Layout>;
+  }
 
   return (
     <Layout>
-      <PageHeader 
-        title="Link Management" 
-        subtitle="Create and manage your links" 
+      <PageHeader
+        title="Link Management"
+        subtitle="Create and manage your links"
         icon={LinkIcon}
         action={
           <Button onClick={handleAddLink} className="bg-admin-primary hover:bg-admin-secondary">
@@ -97,83 +109,55 @@ const LinkList = () => {
         }
       />
 
-      {/* Link Table */}
-      <div className="admin-table">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="admin-table-header">
-              <tr>
-                <th className="admin-table-cell text-left font-semibold">Date</th>
-                <th className="admin-table-cell text-left font-semibold">Created Link</th>
-                <th className="admin-table-cell text-left font-semibold">Name</th>
-                <th className="admin-table-cell text-left font-semibold">URL</th>
-                <th className="admin-table-cell text-left font-semibold">Status</th>
-                <th className="admin-table-cell text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {links.map((link) => (
-                <tr key={link.id} className="admin-table-row">
-                  <td className="admin-table-cell">{formatDate(link.createdAt)}</td>
-                  <td className="admin-table-cell">
-                    <a 
-                      href={link.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-admin-primary hover:underline"
-                    >
-                      {link.createdLink}
-                    </a>
-                  </td>
-                  <td className="admin-table-cell">{link.name}</td>
-                  <td className="admin-table-cell max-w-xs truncate">
-                    <a 
-                      href={link.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-admin-primary hover:underline"
-                    >
-                      {link.url}
-                    </a>
-                  </td>
-                  <td className="admin-table-cell">
-                    <StatusBadge status={link.status} />
-                  </td>
-                  <td className="admin-table-cell text-right">
-                    <div className="admin-table-actions justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleEditLink(link)}
-                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeletePrompt(link.id)}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {links.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="admin-table-cell text-center py-8 text-gray-500">
-                    No links found. Click "Add New Link" to create your first link.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>URL</TableHead>
+            <TableHead>Order</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Created At</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {links.map((link) => (
+            <TableRow key={link._id}>
+              <TableCell>{link.title}</TableCell>
+              <TableCell><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-admin-primary hover:underline">{link.url}</a></TableCell>
+              <TableCell>{link.order}</TableCell>
+              <TableCell>{link.category || '-'}</TableCell>
+              <TableCell>{formatDate(link.createdAt)}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditLink(link)}
+                    className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                  >
+                    <Edit size={14} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeletePrompt(link._id)}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {links.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-4 text-gray-500">No links found.</TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-      {/* Link Form Modal */}
       <LinkFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -181,7 +165,6 @@ const LinkList = () => {
         initialData={editingLink}
       />
 
-      {/* Confirm Delete Dialog */}
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
         onClose={() => setIsConfirmDialogOpen(false)}

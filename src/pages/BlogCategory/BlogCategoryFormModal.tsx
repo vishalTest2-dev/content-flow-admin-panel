@@ -22,14 +22,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/components/ui/use-toast';
-import { PostCategory, PostCategoryInput } from '@/services/postCategory.service';
+import { PostCategory, PostCategoryInput, createCategory, updateCategory } from '@/services/postCategory.service';
 import RichTextEditor from '@/components/common/RichTextEditor';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BlogCategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData?: PostCategory;
-  onSuccess: () => void; // Updated to match the usage
+  onSuccess: () => void;
 }
 
 const formSchema = z.object({
@@ -37,8 +38,8 @@ const formSchema = z.object({
     message: 'Name is required',
   }),
   description: z.string().optional(),
-  slug: z.string().optional(), // Add this to match PostCategoryInput
-  status: z.enum(['active', 'inactive']).default('active'), // Add this to match PostCategoryInput
+  slug: z.string().min(1, { message: 'Slug is required' }),
+  status: z.enum(['active', 'inactive']).default('active'),
 });
 
 const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
@@ -66,13 +67,22 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // TODO: Implement actual create/update logic
+      if (initialData) {
+        await updateCategory(initialData._id, values as PostCategoryInput);
+        toast({
+          title: 'Category Updated',
+          description: 'The post category has been updated.',
+        });
+      } else {
+        await createCategory(values as PostCategoryInput);
+        toast({
+          title: 'Category Created',
+          description: 'The post category has been created.',
+        });
+      }
+      
       onSuccess();
       onClose();
-      toast({
-        title: initialData ? 'Category Updated' : 'Category Created',
-        description: initialData ? 'The post category has been updated.' : 'The post category has been created.',
-      });
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -105,6 +115,26 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
             />
             <FormField
               control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="post-category-slug" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = e.target.value.toLowerCase().replace(/\s+/g, '-');
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -117,6 +147,27 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
                       className="min-h-[150px]"
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

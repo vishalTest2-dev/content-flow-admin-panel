@@ -11,9 +11,9 @@ export interface QuizCategory {
 
 export interface QuizCategoryInput {
   name: string;
-  icon: string;
-  description: string;
-  status: 'active' | 'inactive';
+  icon?: string;
+  description?: string;
+  status?: 'active' | 'inactive';
 }
 
 // Add explicit export functions for create and update
@@ -22,7 +22,7 @@ export const createQuizCategory = async (category: QuizCategoryInput): Promise<Q
   return response.data;
 };
 
-export const updateQuizCategory = async (id: string, category: QuizCategoryInput): Promise<QuizCategory> => {
+export const updateQuizCategory = async (id: string, category: Partial<QuizCategoryInput>): Promise<QuizCategory> => {
   const response = await api.put(`/quiz-categories/${id}`, category);
   return response.data;
 };

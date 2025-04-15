@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import RichTextEditor from '@/components/common/RichTextEditor';
 import { useToast } from '@/hooks/use-toast';
-import { createPost, updatePost, Post } from '@/services/post.service';
+import { Post, PostInput, createPost, updatePost } from '@/services/post.service';
 import { getPostCategories, PostCategory } from '@/services/postCategory.service';
 
 const formSchema = z.object({
@@ -74,7 +74,7 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({ isOpen, onClose, post, on
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       // Convert form data to match the API requirements
-      const postData = {
+      const postData: PostInput = {
         title: data.title,
         slug: data.title.toLowerCase().replace(/\s+/g, '-'),
         content: data.content,

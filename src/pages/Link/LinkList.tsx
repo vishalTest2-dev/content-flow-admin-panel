@@ -83,7 +83,7 @@ const LinkList = () => {
     }
   };
 
-  const handleFormSubmit = async () => {
+  const handleFormSuccess = async () => {
     setIsModalOpen(false);
     await fetchLinks();
   };
@@ -161,8 +161,8 @@ const LinkList = () => {
       <LinkFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
-        initialData={editingLink}
+        onSuccess={handleFormSuccess}
+        initialData={editingLink || undefined}
       />
 
       <ConfirmDialog

@@ -37,10 +37,10 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Setting as SettingType } from '@/services/api'; // Assuming you have a Setting type defined in api.ts
+import { Setting } from '@/services/setting.service'; // Import from correct location
 import { getSettings, updateSetting } from '@/services/api'; // Import the API functions
 
-interface SettingFormValues extends Omit<SettingType, 'key' | 'description'> {
+interface SettingFormValues extends Omit<Setting, 'key' | 'description'> {
   value: string;
 }
 
@@ -50,7 +50,7 @@ const settingSchema = z.object({
   description: z.string().optional(),
 });
 
-const SettingFormModal: React.FC<{ setting: SettingType }> = ({ setting }) => {
+const SettingFormModal: React.FC<{ setting: Setting }> = ({ setting }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const form = useForm<SettingFormValues>({

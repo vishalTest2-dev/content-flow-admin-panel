@@ -1,3 +1,4 @@
+
 import api from './api';
 
 export interface Quiz {
@@ -37,7 +38,7 @@ export const createQuiz = async (quiz: QuizInput): Promise<Quiz> => {
   return response.data;
 };
 
-export const updateQuiz = async (id: string, quiz: QuizInput): Promise<Quiz> => {
+export const updateQuiz = async (id: string, quiz: Partial<QuizInput>): Promise<Quiz> => {
   const response = await api.put(`/quizzes/${id}`, quiz);
   return response.data;
 };

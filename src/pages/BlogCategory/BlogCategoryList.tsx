@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
@@ -7,7 +8,7 @@ import StatusBadge from '@/components/common/StatusBadge';
 import {
   getPostCategories,
   deletePostCategory,
-  PostCategory // Import the type
+  PostCategory
 } from '@/services/postCategory.service'; 
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import BlogCategoryFormModal from './BlogCategoryFormModal';
 import { useToast } from '@/components/ui/use-toast';
 
 const BlogCategoryList = () => {
-  const [categories, setCategories] = useState<PostCategory[]>([]); // Use the imported type
+  const [categories, setCategories] = useState<PostCategory[]>([]); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<PostCategory | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -140,7 +141,6 @@ const BlogCategoryList = () => {
             <thead className="admin-table-header">
               <tr>
                 <th className="admin-table-cell text-left font-semibold">Category Name</th>
-                <th className="admin-table-cell text-left font-semibold">Category Icon</th>
                 <th className="admin-table-cell text-left font-semibold">Description</th>
                 <th className="admin-table-cell text-left font-semibold">Status</th>
                 <th className="admin-table-cell text-right font-semibold">Actions</th>
@@ -148,15 +148,8 @@ const BlogCategoryList = () => {
             </thead>
             <tbody>
               {categories?.map((category) => (
-                <tr key={category.id} className="admin-table-row">
+                <tr key={category._id} className="admin-table-row">
                   <td className="admin-table-cell">{category.name}</td>
-                  <td className="admin-table-cell">
-                    <img 
-                      src={category.icon} 
-                      alt={category.name} 
-                      className="w-10 h-10 object-cover rounded-md"
-                    />
-                  </td>
                   <td className="admin-table-cell max-w-xs truncate">{category.description}</td>
                   <td className="admin-table-cell">
                     <StatusBadge status={category.status} />
@@ -174,7 +167,7 @@ const BlogCategoryList = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleDeletePrompt(category.id)}
+                        onClick={() => handleDeletePrompt(category._id)}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
                         <Trash2 size={14} />
@@ -185,7 +178,7 @@ const BlogCategoryList = () => {
               ))}
               {categories?.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="admin-table-cell text-center py-8 text-gray-500">
+                  <td colSpan={4} className="admin-table-cell text-center py-8 text-gray-500">
                     No categories found. Click "Add New Category" to create your first category.
                   </td>
                 </tr>

@@ -125,7 +125,7 @@ const SettingFormModal: React.FC<{ setting: SettingType }> = ({ setting }) => {
         </Form>
       </DialogContent>
     </Dialog>
-  };
+  );
 };
 
 const Settings: React.FC = () => {

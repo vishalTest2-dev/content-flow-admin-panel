@@ -21,15 +21,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { PostCategory } from '@/services/postCategory.service'; // Assuming this type exists
+import { useToast } from '@/components/ui/use-toast';
+import { PostCategory, PostCategoryInput } from '@/services/postCategory.service';
 import RichTextEditor from '@/components/common/RichTextEditor';
 
 interface BlogCategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: PostCategory) => void; // Updated type here
-  initialData?: PostCategory; // Updated type here and made optional
+  initialData?: PostCategory;
+  onSuccess: () => void; // Updated to match the usage
 }
 
 const formSchema = z.object({
@@ -37,27 +37,37 @@ const formSchema = z.object({
     message: 'Name is required',
   }),
   description: z.string().optional(),
+  slug: z.string().optional(), // Add this to match PostCategoryInput
+  status: z.enum(['active', 'inactive']).default('active'), // Add this to match PostCategoryInput
 });
 
 const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onSuccess,
   initialData,
 }) => {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      description: initialData.description,
+      slug: initialData.slug,
+      status: initialData.status
+    } : {
       name: '',
       description: '',
+      slug: '',
+      status: 'active'
     },
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      onSubmit(values as PostCategory); // Pass values as PostCategory
+      // TODO: Implement actual create/update logic
+      onSuccess();
       onClose();
       toast({
         title: initialData ? 'Category Updated' : 'Category Created',
@@ -101,7 +111,7 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <RichTextEditor
-                      content={field.value}
+                      content={field.value || ''}
                       onChange={field.onChange}
                       placeholder="Post Category Description"
                       className="min-h-[150px]"

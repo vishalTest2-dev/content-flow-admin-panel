@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Folder, Plus, Edit, Trash2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
@@ -8,47 +7,20 @@ import StatusBadge from '@/components/common/StatusBadge';
 import {
   getPostCategories,
   deletePostCategory,
-} from '@/services/postCategory.service'; // Import API functions
+  PostCategory // Import the type
+} from '@/services/postCategory.service'; 
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import BlogCategoryFormModal from './BlogCategoryFormModal';
-
-// Mock blog category data
-const initialCategories = [
-  {
-    id: 1,
-    name: "React",
-    icon: "/placeholder.svg",
-    description: "Articles about React and its ecosystem",
-    status: "active"
-  },
-  {
-    id: 2,
-    name: "JavaScript",
-    icon: "/placeholder.svg",
-    description: "Articles about JavaScript language and features",
-    status: "active"
-  },
-  {
-    id: 3,
-    name: "CSS",
-    icon: "/placeholder.svg",
-    description: "Articles about CSS styling and design",
-    status: "inactive"
-  }
-];
+import { useToast } from '@/components/ui/use-toast';
 
 const BlogCategoryList = () => {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<PostCategory[]>([]); // Use the imported type
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<PostCategory | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
-
-  // Stats calculation
-  const totalCategories = categories.length;
-  const activeCategories = categories.filter(category => category.status === 'active').length;
-  const inactiveCategories = categories.filter(category => category.status === 'inactive').length;
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,21 +37,32 @@ const BlogCategoryList = () => {
       setCategories(data);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch categories');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch categories',
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // Stats calculation
+  const totalCategories = categories.length;
+  const activeCategories = categories.filter(category => category.status === 'active').length;
+  const inactiveCategories = categories.filter(category => category.status === 'inactive').length;
+
   const handleAddCategory = () => {
     setEditingCategory(null);
     setIsModalOpen(true);
   };
 
-  const handleEditCategory = (category: any) => {
+  const handleEditCategory = (category: PostCategory) => {
     setEditingCategory(category);
     setIsModalOpen(true);
   };
 
-  const handleDeletePrompt = (id: number) => {
+  const handleDeletePrompt = (id: string) => {
     setCategoryToDelete(id);
     setIsConfirmDialogOpen(true);
   };
@@ -88,23 +71,29 @@ const BlogCategoryList = () => {
     if (categoryToDelete) {
       try {
         await deletePostCategory(categoryToDelete);
+        toast({
+          title: 'Success',
+          description: 'Category deleted successfully',
+        });
         fetchCategories(); // Refresh the category list
       } catch (err: any) {
-        // Handle deletion error (e.g., display an error message)
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to delete category',
+        });
         console.error('Error deleting category:', err.message);
+      } finally {
+        setIsConfirmDialogOpen(false);
+        setCategoryToDelete(null);
       }
     }
-    setIsConfirmDialogOpen(false);
   };
 
   const handleFormSubmit = async () => {
     setIsModalOpen(false); // Close modal regardless of success/failure
     fetchCategories(); // Refresh categories after submission
   };
-
-  if (loading) {
-    return <Layout>Loading categories...</Layout>;
-  }
 
   return (
     <Layout>

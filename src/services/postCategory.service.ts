@@ -22,6 +22,10 @@ export const getPostCategories = async (): Promise<PostCategory[]> => {
   return response.data;
 };
 
+export const deletePostCategory = async (id: string): Promise<void> => {
+  await api.delete(`/post-categories/${id}`);
+};
+
 const postCategoryService = {
   getCategories: getPostCategories,
   getCategoryById: async (id: string): Promise<PostCategory> => {
@@ -39,10 +43,7 @@ const postCategoryService = {
     return response.data;
   },
 
-  deleteCategory: async (id: string): Promise<void> => {
-    await api.delete(`/post-categories/${id}`);
-  },
+  deleteCategory: deletePostCategory,
 };
 
 export default postCategoryService;
-

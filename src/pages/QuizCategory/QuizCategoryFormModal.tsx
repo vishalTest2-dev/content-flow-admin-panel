@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import RichTextEditor from '@/components/common/RichTextEditor';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createQuizCategory, updateQuizCategory, QuizCategory } from '@/services/quizCategory.service';
+import { createQuizCategory, updateQuizCategory, QuizCategory, QuizCategoryInput } from '@/services/quizCategory.service';
 import { useToast } from "@/components/ui/use-toast";
 
 interface QuizCategoryFormModalProps {
@@ -60,12 +60,20 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
     const onSubmit = async (data: FormValues) => {
         try {
             if (initialData) {
-                await updateQuizCategory(initialData._id, data);
+                // Ensure name is not undefined
+                const categoryData: QuizCategoryInput = {
+                    name: data.name,
+                    icon: data.icon,
+                    description: data.description,
+                    status: data.status
+                };
+                await updateQuizCategory(initialData._id, categoryData);
                 toast({
                     title: "Success",
                     description: "Quiz category updated successfully."
                 });
             } else {
+                // For create, name is always required by the schema
                 await createQuizCategory(data);
                 toast({
                     title: "Success",

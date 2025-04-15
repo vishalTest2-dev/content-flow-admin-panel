@@ -1,8 +1,10 @@
+
 import api from './api';
 
 export interface Setting {
   key: string;
   value: string;
+  description?: string;
 }
 
 const settingService = {

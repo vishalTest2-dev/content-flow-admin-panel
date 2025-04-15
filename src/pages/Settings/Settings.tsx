@@ -40,14 +40,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Setting } from '@/services/setting.service'; // Import from correct location
 import { getSettings, updateSetting } from '@/services/api'; // Import the API functions
 
-interface SettingFormValues extends Omit<Setting, 'key' | 'description'> {
+interface SettingFormValues {
   value: string;
 }
 
 const settingSchema = z.object({
-  key: z.string(),
   value: z.string().optional(),
-  description: z.string().optional(),
 });
 
 const SettingFormModal: React.FC<{ setting: Setting }> = ({ setting }) => {
@@ -56,9 +54,7 @@ const SettingFormModal: React.FC<{ setting: Setting }> = ({ setting }) => {
   const form = useForm<SettingFormValues>({
     resolver: zodResolver(settingSchema),
     defaultValues: {
-      key: setting.key,
       value: setting.value || "",
-      description: setting.description || "",
     },
   });
 
@@ -101,7 +97,7 @@ const SettingFormModal: React.FC<{ setting: Setting }> = ({ setting }) => {
                 </FormItem>
               )}
             />
-             {/* Display description as read-only */}
+             {/* Display description as read-only if it exists */}
              {setting.description && (
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
@@ -129,7 +125,7 @@ const SettingFormModal: React.FC<{ setting: Setting }> = ({ setting }) => {
 };
 
 const Settings: React.FC = () => {
-  const [settings, setSettings] = useState<SettingType[]>([]);
+  const [settings, setSettings] = useState<Setting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

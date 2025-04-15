@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { createQuiz, updateQuiz, getQuizCategories, Quiz, QuizCategory } from '@/services/quiz.service';
+import { createQuiz, updateQuiz, getQuizCategories, Quiz, QuizCategory, QuizInput } from '@/services/quiz.service';
 
 // Define form schema
 const quizFormSchema = z.object({
@@ -70,9 +70,17 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
     setIsSubmitting(true);
     try {
       if (quiz) {
-        await updateQuiz(quiz._id, data);
+        // For update, we ensure all fields are present
+        const quizData: QuizInput = {
+          question: data.question,
+          answer: data.answer,
+          category: data.category,
+          status: data.status
+        };
+        await updateQuiz(quiz._id, quizData);
         toast.success("Quiz updated successfully!");
       } else {
+        // For create, all fields are already required by the schema
         await createQuiz(data);
         toast.success("Quiz created successfully!");
       }

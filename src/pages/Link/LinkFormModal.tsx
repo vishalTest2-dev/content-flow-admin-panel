@@ -36,7 +36,8 @@ type LinkFormValues = z.infer<typeof linkFormSchema>;
 interface LinkFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  link?: {
+  onSuccess?: () => void;
+  initialData?: {
     _id: string;
     title: string;
     url: string;
@@ -48,17 +49,18 @@ interface LinkFormModalProps {
 const LinkFormModal: React.FC<LinkFormModalProps> = ({
   isOpen,
   onClose,
-  link,
+  onSuccess,
+  initialData,
 }) => {
   const { toast } = useToast();
   const form = useForm<LinkFormValues>({
     resolver: zodResolver(linkFormSchema),
-    defaultValues: link
+    defaultValues: initialData
       ? {
-          title: link.title,
-          url: link.url,
-          order: link.order,
-          category: link.category,
+          title: initialData.title,
+          url: initialData.url,
+          order: initialData.order,
+          category: initialData.category,
         }
       : {
           title: '',
@@ -68,12 +70,12 @@ const LinkFormModal: React.FC<LinkFormModalProps> = ({
         },
   });
 
-  const isEditMode = !!link;
+  const isEditMode = !!initialData;
 
   const onSubmit = async (data: LinkFormValues) => {
     try {
-      if (isEditMode) {
-        await updateLink(link._id, data);
+      if (isEditMode && initialData) {
+        await updateLink(initialData._id, data);
         toast({
           title: 'Success',
           description: 'Link updated successfully.',
@@ -85,7 +87,12 @@ const LinkFormModal: React.FC<LinkFormModalProps> = ({
           description: 'Link created successfully.',
         });
       }
-      onClose();
+      form.reset();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (error: any) {
       toast({
         title: 'Error',

@@ -45,9 +45,21 @@ const LinkList = () => {
     setError(null);
     try {
       const response = await getLinks();
-      setLinks(response.data);
+      // Ensure the response contains data before setting the state
+      if (response && Array.isArray(response)) {
+        setLinks(response);
+      } else if (response && response.data && Array.isArray(response.data)) {
+        setLinks(response.data);
+      } else {
+        // Handle unexpected response format
+        setLinks([]);
+        setError('Invalid response format from server');
+        console.error('Unexpected API response format:', response);
+      }
     } catch (err: any) {
+      setLinks([]);
       setError(err.response?.data?.message || 'Failed to fetch links');
+      console.error('Error fetching links:', err);
     } finally {
       setIsLoading(false);
     }
@@ -121,36 +133,37 @@ const LinkList = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {links.map((link) => (
-            <TableRow key={link._id}>
-              <TableCell>{link.title}</TableCell>
-              <TableCell><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-admin-primary hover:underline">{link.url}</a></TableCell>
-              <TableCell>{link.order}</TableCell>
-              <TableCell>{link.category || '-'}</TableCell>
-              <TableCell>{formatDate(link.createdAt)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditLink(link)}
-                    className="text-amber-600 border-amber-200 hover:bg-amber-50"
-                  >
-                    <Edit size={14} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeletePrompt(link._id)}
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-          {links.length === 0 && (
+          {links && links.length > 0 ? (
+            links.map((link) => (
+              <TableRow key={link._id}>
+                <TableCell>{link.title}</TableCell>
+                <TableCell><a href={link.url} target="_blank" rel="noopener noreferrer" className="text-admin-primary hover:underline">{link.url}</a></TableCell>
+                <TableCell>{link.order}</TableCell>
+                <TableCell>{link.category || '-'}</TableCell>
+                <TableCell>{formatDate(link.createdAt)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditLink(link)}
+                      className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                    >
+                      <Edit size={14} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeletePrompt(link._id)}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center py-4 text-gray-500">No links found.</TableCell>
             </TableRow>

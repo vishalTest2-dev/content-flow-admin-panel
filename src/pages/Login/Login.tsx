@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoginCredentials } from '@/services/auth.service';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -31,7 +32,12 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login(data);
+      // Ensure data matches LoginCredentials type by explicitly creating the object
+      const credentials: LoginCredentials = {
+        email: data.email,
+        password: data.password
+      };
+      await login(credentials);
     } catch (error) {
       console.error('Login failed:', error);
     }

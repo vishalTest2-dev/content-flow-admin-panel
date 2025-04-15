@@ -6,6 +6,7 @@ export interface PostCategory {
   name: string;
   slug: string;
   description: string;
+  icon?: string;
   status: 'active' | 'inactive';
 }
 
@@ -13,6 +14,7 @@ export interface PostCategoryInput {
   name: string;
   slug: string;
   description?: string;
+  icon?: string;
   status?: 'active' | 'inactive';
 }
 

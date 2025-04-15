@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
-import { User, Camera, Save } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { User, Camera, Save, Upload } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Profile = () => {
   const { user, updateProfile, isLoading } = useAuth();
@@ -17,19 +19,43 @@ const Profile = () => {
     email: user?.email || '',
     photo: user?.photo || '/placeholder.svg'
   });
+  
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(user?.photo || '/placeholder.svg');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL for immediate display
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewPhoto(previewUrl);
+      
+      // Read the file as base64 for submission
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile(prev => ({ ...prev, photo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile({
-      name: profile.name,
-      email: profile.email,
-      photo: profile.photo
-    });
+    try {
+      await updateProfile({
+        name: profile.name,
+        email: profile.email,
+        photo: profile.photo
+      });
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error("Update profile error:", error);
+    }
   };
 
   return (
@@ -45,17 +71,24 @@ const Profile = () => {
           <Card>
             <CardContent className="pt-6 flex flex-col items-center">
               <div className="relative mb-4">
-                <img 
-                  src={profile.photo} 
-                  alt="Profile Photo" 
-                  className="w-32 h-32 rounded-full object-cover"
-                />
-                <button 
-                  className="absolute bottom-0 right-0 bg-admin-primary text-white p-2 rounded-full shadow-lg hover:bg-admin-secondary transition-colors"
+                <Avatar className="w-32 h-32">
+                  <AvatarImage src={previewPhoto || profile.photo} alt="Profile" className="object-cover" />
+                  <AvatarFallback className="text-xl">{profile.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <label 
+                  htmlFor="profile-photo"
+                  className="absolute bottom-0 right-0 bg-admin-primary text-white p-2 rounded-full shadow-lg hover:bg-admin-secondary transition-colors cursor-pointer"
                   aria-label="Change profile photo"
                 >
                   <Camera size={16} />
-                </button>
+                  <input 
+                    type="file" 
+                    id="profile-photo" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                  />
+                </label>
               </div>
               <h3 className="text-xl font-semibold">{profile.name}</h3>
               <p className="text-gray-500">{profile.email}</p>

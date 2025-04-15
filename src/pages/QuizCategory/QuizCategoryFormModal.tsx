@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Image, Upload } from 'lucide-react';
 import RichTextEditor from '@/components/common/RichTextEditor';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { createQuizCategory, updateQuizCategory, QuizCategory, QuizCategoryInput } from '@/services/quizCategory.service';
@@ -42,6 +43,8 @@ type FormValues = z.infer<typeof formSchema>;
 
 const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, onClose, onSuccess, initialData }) => {
     const { toast } = useToast();
+    const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon || null);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
@@ -57,29 +60,39 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
         },
     });
 
+    const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Create preview for display
+            const preview = URL.createObjectURL(file);
+            setIconPreview(preview);
+
+            // Read file as base64 for submission
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                form.setValue('icon', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const onSubmit = async (data: FormValues) => {
         try {
+            // Ensure all required fields are present for the API
+            const categoryData: QuizCategoryInput = {
+                name: data.name,
+                icon: data.icon,
+                description: data.description,
+                status: data.status
+            };
+
             if (initialData) {
-                // Ensure name is included explicitly (it's required by the API)
-                const categoryData: QuizCategoryInput = {
-                    name: data.name,
-                    icon: data.icon,
-                    description: data.description,
-                    status: data.status
-                };
                 await updateQuizCategory(initialData._id, categoryData);
                 toast({
                     title: "Success",
                     description: "Quiz category updated successfully."
                 });
             } else {
-                // For create, explicitly include all required fields
-                const categoryData: QuizCategoryInput = {
-                    name: data.name,
-                    icon: data.icon,
-                    description: data.description,
-                    status: data.status
-                };
                 await createQuizCategory(categoryData);
                 toast({
                     title: "Success",
@@ -121,6 +134,49 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
                                 </FormItem>
                             )}
                         />
+
+                        <FormField
+                            control={form.control}
+                            name="icon"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category Icon</FormLabel>
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-16 h-16 border rounded-md flex items-center justify-center bg-gray-50">
+                                            {iconPreview || field.value ? (
+                                                <img 
+                                                    src={iconPreview || field.value} 
+                                                    alt="Category Icon" 
+                                                    className="max-w-full max-h-full object-contain"
+                                                />
+                                            ) : (
+                                                <Image className="text-gray-400" size={24} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label 
+                                                htmlFor="category-icon" 
+                                                className="cursor-pointer inline-flex items-center rounded-md px-3 py-2 text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                                            >
+                                                <Upload size={16} className="mr-2" />
+                                                Upload Icon
+                                                <input
+                                                    id="category-icon"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleIconChange}
+                                                />
+                                            </label>
+                                            <p className="text-xs text-gray-500 mt-1">Recommended: 64x64px PNG</p>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" {...field} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <FormField
                             control={form.control}
                             name="description"
@@ -139,6 +195,7 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="status"
@@ -160,6 +217,7 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
                                 </FormItem>
                             )}
                         />
+
                         <DialogFooter className="pt-4">
                             <Button type="button" variant="outline" onClick={onClose} className="mr-2">
                                 Cancel

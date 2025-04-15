@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Image, Upload } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -38,7 +38,7 @@ const formSchema = z.object({
     message: 'Name is required',
   }),
   description: z.string().optional(),
-  slug: z.string().min(1, { message: 'Slug is required' }),
+  icon: z.string().default('/placeholder.svg'),
   status: z.enum(['active', 'inactive']).default('active'),
 });
 
@@ -49,32 +49,61 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
   initialData,
 }) => {
   const { toast } = useToast();
+  const [iconPreview, setIconPreview] = useState<string | null>(initialData?.icon || null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ? {
       name: initialData.name,
       description: initialData.description,
-      slug: initialData.slug,
+      icon: initialData.icon || '/placeholder.svg',
       status: initialData.status
     } : {
       name: '',
       description: '',
-      slug: '',
+      icon: '/placeholder.svg',
       status: 'active'
     },
   });
 
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create preview for display
+      const preview = URL.createObjectURL(file);
+      setIconPreview(preview);
+
+      // Read file as base64 for submission
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue('icon', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Generate a slug from the name
+      const slug = values.name.toLowerCase().replace(/\s+/g, '-');
+      
+      // Create input object with all required fields
+      const categoryData: PostCategoryInput = {
+        name: values.name,
+        description: values.description,
+        icon: values.icon,
+        status: values.status,
+        slug: slug // Include the generated slug
+      };
+
       if (initialData) {
-        await updateCategory(initialData._id, values as PostCategoryInput);
+        await updateCategory(initialData._id, categoryData);
         toast({
           title: 'Category Updated',
           description: 'The post category has been updated.',
         });
       } else {
-        await createCategory(values as PostCategoryInput);
+        await createCategory(categoryData);
         toast({
           title: 'Category Created',
           description: 'The post category has been created.',
@@ -113,26 +142,49 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="slug"
+              name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="post-category-slug" 
-                      {...field} 
-                      onChange={(e) => {
-                        const value = e.target.value.toLowerCase().replace(/\s+/g, '-');
-                        field.onChange(value);
-                      }}
-                    />
-                  </FormControl>
+                  <FormLabel>Category Icon</FormLabel>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 border rounded-md flex items-center justify-center bg-gray-50">
+                      {iconPreview || field.value ? (
+                        <img 
+                          src={iconPreview || field.value} 
+                          alt="Category Icon" 
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      ) : (
+                        <Image className="text-gray-400" size={24} />
+                      )}
+                    </div>
+                    <div>
+                      <label 
+                        htmlFor="blog-category-icon" 
+                        className="cursor-pointer inline-flex items-center rounded-md px-3 py-2 text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <Upload size={16} className="mr-2" />
+                        Upload Icon
+                        <input
+                          id="blog-category-icon"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleIconChange}
+                        />
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">Recommended: 64x64px PNG</p>
+                    </div>
+                  </div>
+                  <input type="hidden" {...field} />
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="description"
@@ -151,6 +203,7 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="status"
@@ -172,6 +225,7 @@ const BlogCategoryFormModal: React.FC<BlogCategoryFormModalProps> = ({
                 </FormItem>
               )}
             />
+
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={onClose} className="mr-2">
                 Cancel

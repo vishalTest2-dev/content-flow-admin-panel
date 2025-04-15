@@ -16,12 +16,14 @@ export interface PostCategoryInput {
   status: 'active' | 'inactive';
 }
 
-const postCategoryService = {
-  getCategories: async (): Promise<PostCategory[]> => {
-    const response = await api.get('/post-categories');
-    return response.data;
-  },
+// Export the function with the name expected in the imports
+export const getPostCategories = async (): Promise<PostCategory[]> => {
+  const response = await api.get('/post-categories');
+  return response.data;
+};
 
+const postCategoryService = {
+  getCategories: getPostCategories,
   getCategoryById: async (id: string): Promise<PostCategory> => {
     const response = await api.get(`/post-categories/${id}`);
     return response.data;
@@ -43,3 +45,4 @@ const postCategoryService = {
 };
 
 export default postCategoryService;
+

@@ -9,46 +9,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import QuizFormModal from './QuizFormModal';
-import { getQuizzes, deleteQuiz } from '@/services/quiz.service';
-import { Quiz } from '@/services/quiz.service';
-// Mock quiz data
-const initialQuizzes = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    answer: "Paris",
-    category: "Geography",
-    status: "active"
-  },
-  {
-    id: 2,
-    question: "Which planet is known as the Red Planet?",
-    answer: "Mars",
-    category: "Space",
-    status: "active"
-  },
-  {
-    id: 3,
-    question: "What is the largest mammal?",
-    answer: "Blue Whale",
-    category: "Animals",
-    status: "inactive"
-  },
-  {
-    id: 4,
-    question: "Who wrote 'Romeo and Juliet'?",
-    answer: "William Shakespeare",
-    category: "Literature",
-    status: "active"
-  },
-  {
-    id: 5,
-    question: "What is the chemical symbol for gold?",
-    answer: "Au",
-    category: "Chemistry",
-    status: "inactive"
-  }
-];
+import { getQuizzes, deleteQuiz, Quiz } from '@/services/quiz.service';
 
 const QuizList = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -77,8 +38,8 @@ const QuizList = () => {
 
   // Stats calculation
   const totalQuizzes = quizzes.length;
-  const activeQuizzes = quizzes.filter(quiz => quiz.status === 'published').length;
-  const inactiveQuizzes = quizzes.filter(quiz => quiz.status === 'draft').length;
+  const activeQuizzes = quizzes.filter(quiz => quiz.status === 'active').length;
+  const inactiveQuizzes = quizzes.filter(quiz => quiz.status === 'inactive').length;
 
   const handleAddQuiz = () => {
     setEditingQuiz(null);
@@ -101,7 +62,6 @@ const QuizList = () => {
         await deleteQuiz(quizToDelete);
         setQuizzes(quizzes.filter(quiz => quiz._id !== quizToDelete));
       } catch (err: any) {
-        // Consider displaying a toast or error message here.
         console.error("Failed to delete quiz:", err.message);
       }
     }
@@ -151,7 +111,8 @@ const QuizList = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
+                <TableHead>Question</TableHead>
+                <TableHead>Answer</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -160,8 +121,9 @@ const QuizList = () => {
             <TableBody>
               {quizzes.map((quiz) => (
                 <TableRow key={quiz._id}>
-                  <TableCell>{quiz.title}</TableCell>
-                  <TableCell>{quiz.category?.name || 'Uncategorized'}</TableCell>
+                  <TableCell>{quiz.question}</TableCell>
+                  <TableCell>{quiz.answer}</TableCell>
+                  <TableCell>{quiz.category}</TableCell>
                   <TableCell>
                     <StatusBadge status={quiz.status} />
                   </TableCell>
@@ -187,7 +149,7 @@ const QuizList = () => {
               ))}
               {quizzes.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center p-4">
+                  <TableCell colSpan={5} className="text-center p-4">
                     No quizzes found.
                   </TableCell>
                 </TableRow>
@@ -200,8 +162,11 @@ const QuizList = () => {
       {/* Quiz Form Modal */}
       <QuizFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialData={editingQuiz}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingQuiz(null);
+        }}
+        quiz={editingQuiz || undefined}
         onSuccess={() => {
           setIsModalOpen(false);
           fetchQuizzes();

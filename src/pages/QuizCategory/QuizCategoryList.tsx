@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tag, Plus, Edit, Trash2, Loader } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast"
@@ -45,7 +44,6 @@ const QuizCategoryList = () => {
     fetchCategories();
   }, []);
 
-  // Stats calculation
   const totalCategories = categories.length;
   const activeCategories = categories.filter(category => category.status === 'active').length;
   const inactiveCategories = categories.filter(category => category.status === 'inactive').length;
@@ -169,24 +167,22 @@ const QuizCategoryList = () => {
         </Table>
       )}
 
-      {/* Quiz Category Form Modal */}
       <QuizCategoryFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleFormSubmit}
-        initialData={editingCategory}
+        category={editingCategory}
       />
 
-      {/* Confirm Delete Dialog */}
       <ConfirmDialog
-      isOpen={isConfirmDialogOpen}
-      onClose={() => setIsConfirmDialogOpen(false)}
-      onConfirm={handleDeleteConfirm}
-      title="Delete Quiz Category"
-      description="Are you sure you want to delete this quiz category? This action cannot be undone."
-      confirmText="Delete"
-      cancelText="Cancel"
-    />
+        isOpen={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Quiz Category"
+        description="Are you sure you want to delete this quiz category? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </Layout>
   );
 };

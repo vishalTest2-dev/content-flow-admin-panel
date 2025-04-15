@@ -27,23 +27,28 @@ export const updateQuizCategory = async (id: string, category: QuizCategoryInput
   return response.data;
 };
 
+// Add explicit export for delete function
+export const deleteQuizCategory = async (id: string): Promise<void> => {
+  await api.delete(`/quiz-categories/${id}`);
+};
+
+// Export getQuizCategories to be used in QuizCategoryList.tsx
+export const getQuizCategories = async (): Promise<QuizCategory[]> => {
+  const response = await api.get('/quiz-categories');
+  return response.data;
+};
+
+export const getCategoryById = async (id: string): Promise<QuizCategory> => {
+  const response = await api.get(`/quiz-categories/${id}`);
+  return response.data;
+};
+
 const quizCategoryService = {
-  getCategories: async (): Promise<QuizCategory[]> => {
-    const response = await api.get('/quiz-categories');
-    return response.data;
-  },
-
-  getCategoryById: async (id: string): Promise<QuizCategory> => {
-    const response = await api.get(`/quiz-categories/${id}`);
-    return response.data;
-  },
-
+  getCategories: getQuizCategories,
+  getCategoryById,
   createCategory: createQuizCategory,
   updateCategory: updateQuizCategory,
-
-  deleteCategory: async (id: string): Promise<void> => {
-    await api.delete(`/quiz-categories/${id}`);
-  },
+  deleteCategory: deleteQuizCategory,
 };
 
 export default quizCategoryService;

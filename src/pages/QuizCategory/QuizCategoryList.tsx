@@ -10,8 +10,7 @@ import StatusBadge from '@/components/common/StatusBadge';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getQuizCategories, deleteQuizCategory } from '@/services/quizCategory.service';
-import { QuizCategory } from '@/types/quiz';
+import { getQuizCategories, deleteQuizCategory, QuizCategory } from '@/services/quizCategory.service';
 import QuizCategoryFormModal from './QuizCategoryFormModal';
 
 const QuizCategoryList = () => {
@@ -48,8 +47,8 @@ const QuizCategoryList = () => {
 
   // Stats calculation
   const totalCategories = categories.length;
-  const activeCategories = categories.filter(category => category.status === 'Active').length;
-  const inactiveCategories = categories.filter(category => category.status === 'Inactive').length;
+  const activeCategories = categories.filter(category => category.status === 'active').length;
+  const inactiveCategories = categories.filter(category => category.status === 'inactive').length;
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -87,6 +86,10 @@ const QuizCategoryList = () => {
       setIsConfirmDialogOpen(false);
       setCategoryToDelete(null);
     }
+  };
+
+  const handleFormSubmit = async () => {
+    await fetchCategories();
   };
 
   return (
@@ -170,7 +173,7 @@ const QuizCategoryList = () => {
       <QuizCategoryFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleFormSubmit}
+        onSuccess={handleFormSubmit}
         initialData={editingCategory}
       />
 

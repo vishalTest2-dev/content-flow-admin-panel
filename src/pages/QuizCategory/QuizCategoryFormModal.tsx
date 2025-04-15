@@ -60,7 +60,7 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
     const onSubmit = async (data: FormValues) => {
         try {
             if (initialData) {
-                // Ensure name is not undefined
+                // Ensure name is included explicitly (it's required by the API)
                 const categoryData: QuizCategoryInput = {
                     name: data.name,
                     icon: data.icon,
@@ -73,8 +73,14 @@ const QuizCategoryFormModal: React.FC<QuizCategoryFormModalProps> = ({ isOpen, o
                     description: "Quiz category updated successfully."
                 });
             } else {
-                // For create, name is always required by the schema
-                await createQuizCategory(data);
+                // For create, explicitly include all required fields
+                const categoryData: QuizCategoryInput = {
+                    name: data.name,
+                    icon: data.icon,
+                    description: data.description,
+                    status: data.status
+                };
+                await createQuizCategory(categoryData);
                 toast({
                     title: "Success",
                     description: "Quiz category created successfully."

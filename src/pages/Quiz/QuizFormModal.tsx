@@ -70,7 +70,7 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
     setIsSubmitting(true);
     try {
       if (quiz) {
-        // For update, we ensure all fields are present
+        // For update, ensure all required fields are present
         const quizData: QuizInput = {
           question: data.question,
           answer: data.answer,
@@ -80,8 +80,14 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
         await updateQuiz(quiz._id, quizData);
         toast.success("Quiz updated successfully!");
       } else {
-        // For create, all fields are already required by the schema
-        await createQuiz(data);
+        // For create, ensure all required fields are present
+        const quizData: QuizInput = {
+          question: data.question,
+          answer: data.answer,
+          category: data.category,
+          status: data.status
+        };
+        await createQuiz(quizData);
         toast.success("Quiz created successfully!");
       }
       if (onSuccess) {

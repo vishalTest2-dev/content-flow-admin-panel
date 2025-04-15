@@ -14,8 +14,8 @@ import { createQuiz, updateQuiz, getQuizCategories, Quiz, QuizCategory, QuizInpu
 // Define form schema with options
 const quizFormSchema = z.object({
   question: z.string().min(1, { message: "Question is required." }),
-  option1: z.string().optional(),
-  option2: z.string().optional(),
+  option1: z.string().min(1, { message: "Option 1 is required." }),
+  option2: z.string().min(1, { message: "Option 2 is required." }),
   option3: z.string().optional(),
   option4: z.string().optional(),
   correctAnswer: z.string().min(1, { message: "Correct answer is required." }),
@@ -37,6 +37,7 @@ interface QuizFormModalProps {
 const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, onSuccess }) => {
   const [categories, setCategories] = useState<QuizCategory[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [options, setOptions] = useState<string[]>([]);
 
   const form = useForm<QuizFormValues>({
     resolver: zodResolver(quizFormSchema),
@@ -62,6 +63,18 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
           status: "active",
         },
   });
+
+  // Watch form fields to update options for correct answer dropdown
+  const option1 = form.watch('option1');
+  const option2 = form.watch('option2');
+  const option3 = form.watch('option3');
+  const option4 = form.watch('option4');
+
+  // Update options array when option fields change
+  useEffect(() => {
+    const newOptions = [option1, option2, option3, option4].filter(option => option && option.trim() !== '');
+    setOptions(newOptions);
+  }, [option1, option2, option3, option4]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -117,92 +130,6 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="question"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Question</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter quiz question" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="option1"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Option 1</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter option 1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="option2"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Option 2</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter option 2" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="option3"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Option 3</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter option 3" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="option4"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Option 4</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter option 4" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="correctAnswer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Correct Answer</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter correct answer" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -251,6 +178,107 @@ const QuizFormModal: React.FC<QuizFormModalProps> = ({ isOpen, onClose, quiz, on
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="question"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Question</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter quiz question" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="option1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Option 1</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter option 1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="option2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Option 2</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter option 2" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="option3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Option 3 (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter option 3" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="option4"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Option 4 (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter option 4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="correctAnswer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correct Answer</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={options.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select correct answer" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {options.map((option, index) => (
+                        <SelectItem key={index} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="mr-2">

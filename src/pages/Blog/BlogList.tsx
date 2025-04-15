@@ -10,48 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from '@/components/ui/button';
 import BlogFormModal from "@/pages/Blog/BlogFormModal";
 import { formatDate } from '@/lib/utils';
-
-// Mock blog data
-const initialBlogs = [
-  {
-    id: 1,
-    title: "Introduction to React Hooks",
-    shortDescription: "Learn the basics of React Hooks and how to use them in your projects.",
-    image: "/placeholder.svg",
-    category: "React",
-    status: "active",
-    createdAt: "2024-04-01T00:00:00Z"
-  },
-  {
-    id: 2,
-    title: "Advanced CSS Techniques",
-    shortDescription: "Discover advanced CSS techniques to create stunning web designs.",
-    image: "/placeholder.svg",
-    category: "CSS",
-    status: "active",
-    createdAt: "2024-03-25T00:00:00Z"
-  },
-  {
-    id: 3,
-    title: "Getting Started with TypeScript",
-    shortDescription: "A beginner's guide to TypeScript and its benefits.",
-    image: "/placeholder.svg",
-    category: "TypeScript",
-    status: "draft",
-    createdAt: "2024-03-15T00:00:00Z"
-  }
-];
-
-import { getPosts, deletePost } from "@/services/post.service"; // Adjust import path as needed
+import { getPosts, deletePost, Post } from "@/services/post.service";
 
 const BlogList = () => {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState(null);
+  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -72,20 +40,20 @@ const BlogList = () => {
 
   // Stats calculation
   const totalPosts = posts.length;
-  const livePosts = posts.filter(post => post.status === 'published').length; // Assuming 'published' is the live status
-  const draftPosts = posts.filter(post => post.status === 'draft').length;
+  const livePosts = posts.filter(post => post.status === 'active').length;
+  const draftPosts = posts.filter(post => post.status === 'inactive').length;
 
   const handleCreatePost = () => {
     setEditingPost(null);
     setIsFormModalOpen(true);
   };
 
-  const handleEditPost = (post: any) => {
+  const handleEditPost = (post: Post) => {
     setEditingPost(post);
     setIsFormModalOpen(true);
   };
 
-  const handleDeletePost = (post: any) => {
+  const handleDeletePost = (post: Post) => {
     setPostToDelete(post);
     setIsDeleteModalOpen(true);
   };
@@ -147,7 +115,7 @@ const BlogList = () => {
             {posts.map((post) => (
               <TableRow key={post._id}>
                 <TableCell>{post.title}</TableCell>
-                <TableCell>{post.category ? post.category.name : "Uncategorized"}</TableCell>
+                <TableCell>{post.category}</TableCell>
                 <TableCell>
                   <StatusBadge status={post.status} />
                 </TableCell>
@@ -178,7 +146,7 @@ const BlogList = () => {
       <BlogFormModal
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
-        post={editingPost}
+        post={editingPost || undefined}
         onSuccess={handleFormSuccess}
       />
 
@@ -192,7 +160,7 @@ const BlogList = () => {
         cancelText="Cancel"
       />
     </Layout>
-  )
+  );
 };
 
 export default BlogList;

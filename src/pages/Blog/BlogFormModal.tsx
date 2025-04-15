@@ -15,10 +15,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import RichTextEditor from '@/components/common/RichTextEditor';
 import { useToast } from '@/hooks/use-toast';
-import { createPost, updatePost, getPostCategories, Post, PostCategory } from '@/services/post.service'; // Assuming these functions exist
+import { createPost, updatePost, Post } from '@/services/post.service';
+import { getPostCategories, PostCategory } from '@/services/postCategory.service';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }),
@@ -31,15 +32,21 @@ interface BlogFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   post?: Post;
+  onSuccess?: () => void;
 }
 
-const BlogFormModal: React.FC<BlogFormModalProps> = ({ isOpen, onClose, post }) => {
+const BlogFormModal: React.FC<BlogFormModalProps> = ({ isOpen, onClose, post, onSuccess }) => {
   const [categories, setCategories] = useState<PostCategory[]>([]);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: post || {
+    defaultValues: post ? {
+      title: post.title,
+      categoryId: post.category,
+      content: post.content,
+      status: post.status === 'active' ? 'published' : 'draft',
+    } : {
       title: '',
       categoryId: '',
       content: '',
@@ -66,20 +73,36 @@ const BlogFormModal: React.FC<BlogFormModalProps> = ({ isOpen, onClose, post }) 
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
+      // Convert form data to match the API requirements
+      const postData = {
+        title: data.title,
+        slug: data.title.toLowerCase().replace(/\s+/g, '-'),
+        content: data.content,
+        shortDescription: data.content.substring(0, 150),
+        thumbnail: '/placeholder.svg',
+        category: data.categoryId,
+        status: data.status === 'published' ? 'active' : 'inactive',
+      };
+
       if (post) {
-        await updatePost(post._id, data);
+        await updatePost(post._id, postData);
         toast({
           title: 'Success',
           description: 'Post updated successfully!',
         });
       } else {
-        await createPost(data);
+        await createPost(postData);
         toast({
           title: 'Success',
           description: 'Post created successfully!',
         });
       }
-      onClose();
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (error: any) {
       toast({
         variant: 'destructive',
